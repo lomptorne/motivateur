@@ -1,29 +1,26 @@
 import os 
 import sys
-import requests 
-import traceback
+
 import os.path
 import datetime
 from string import digits
 from pathlib import PureWindowsPath
-
 
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QLabel, QLineEdit, QWidget, QPushButton, QApplication, QHBoxLayout, QVBoxLayout
+from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot, QThreadPool
 
+# Signals and worker for multhreading
 class WorkerSignals(QObject):
 
 	start = pyqtSignal()
 	finished = pyqtSignal()
 	error = pyqtSignal(tuple)
-
-
 
 class Worker(QRunnable):
 
@@ -52,6 +49,7 @@ class Worker(QRunnable):
 		finally:
 			self.signals.finished.emit()  
 
+# Main class for the script
 class Motivateur(QWidget):
 
 	def __init__(self):
@@ -71,12 +69,11 @@ class Motivateur(QWidget):
 		label_mail = QLabel("Mail:")
 		label_number = QLabel("Telephone")
 		label_job = QLabel("Intitule du poste:")
-		label_diploma = QLabel("Diplome")
+		label_diploma = QLabel("Diplôme")
 		label_univ = QLabel("Ecole")
 		label_contact = QLabel("Nom du destinataire (Avec intitulé)")
 		label_comp = QLabel("3 compétences aleatoires:")
 
-		
 		# Set the input field
 		self.input_name = QLineEdit(self)
 		self.input_adress = QLineEdit(self)
@@ -98,7 +95,7 @@ class Motivateur(QWidget):
 		self.input_mail.setPlaceholderText("csedack@gmail.com")
 		self.input_number.setPlaceholderText("123-456-789")
 		self.input_job.setPlaceholderText("Deputé")
-		self.input_diploma.setPlaceholderText("Master en étude du genre")
+		self.input_diploma.setPlaceholderText("Master en étude du vide")
 		self.input_univ.setPlaceholderText("L'université de Issou") 
 		self.input_contact.setPlaceholderText("Laisser vide si pas de nom")
 		self.input_comp1.setPlaceholderText("Dépythonage de puits")
@@ -106,18 +103,19 @@ class Motivateur(QWidget):
 		self.input_comp3.setPlaceholderText("Rendez-vous CAF")
 
 		# Set the button
-		self.btn_launch = QPushButton("Generer")
+		self.btn_launch = QPushButton("Générer")
 
 		# Set the threadpool
 		self.threadpool = QThreadPool()
 		self.threadpool.setMaxThreadCount(5)
 
+		# Set the competences box
 		box_comp = QHBoxLayout()
 		box_comp.addWidget(self.input_comp1)
 		box_comp.addWidget(self.input_comp2)
 		box_comp.addWidget(self.input_comp3)
 
-		# Set boxes layout
+		# Set main windows layout
 		box_main = QVBoxLayout()
 		box_main.addWidget(label_name)
 		box_main.addWidget(self.input_name)
@@ -151,19 +149,19 @@ class Motivateur(QWidget):
 		# Connect button to the launcher
 		self.btn_launch.clicked.connect(self.launcher)
 	
-	# Multi thread caller for the downloader
+	# Multi thread caller for the script
 	def launcher(self):
 
 		worker = Worker(self.generator)
 		self.threadpool.start(worker)
+
 		worker.signals.start.connect(self.function_start)
 		worker.signals.finished.connect(self.function_end)
 
-
+	# main program function
 	def generator(self):
-		# Set the different strings for the pdf 
 
-		# Input vars
+		# Set the user inputs vars
 		name = str(self.input_name.text())
 		adress = str(self.input_adress.text())
 		city = str(self.input_city.text())
@@ -176,7 +174,7 @@ class Motivateur(QWidget):
 		comp2 = str(self.input_comp2.text())
 		comp3 = str(self.input_comp3.text())
 
-		# place and date
+		# Set the place and date
 		remove_digits = str.maketrans('', '', digits)
 		place = city.translate(remove_digits)
 		place = place.strip()
@@ -184,22 +182,26 @@ class Motivateur(QWidget):
 		dateplace =  "À " + place + " le " + str(today.day) + "/" + str(today.month) + "/" + str(today.year)
 		contact = "Madame, Monsieur,"
 
+		# If there is text in the contact field
 		if len(str(self.input_contact.text())) != 0 : 
 			contact = "à l'attention de " + str(self.input_contact.text())
 
+		# Setting the path for the output
 		letter = []
 		outfilename = "Lettre.pdf"
 		outfilepath = os.path.join( self.path, outfilename )
-		
+
+		# Setting the path for windows os 
 		if os.name == 'nt':
 			outfilepath = PureWindowsPath(outfilepath)
 
+		# Setting the pdf document and styles 
 		doc = SimpleDocTemplate(outfilepath, rightMargin=2*cm,leftMargin=2*cm,topMargin=2*cm,bottomMargin=2*cm)
 		styles=getSampleStyleSheet()
 		styles.add(ParagraphStyle(name='Right', alignment=TA_RIGHT))
 		styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
 		
-
+		# Write the pdf with differents strings and inputs 
 		ptext = '<font size="12">{}</font>'.format(name)
 		letter.append(Paragraph(ptext, styles["Normal"]))  
 		ptext = '<font size="12">{}</font>'.format(adress)
@@ -244,16 +246,18 @@ class Motivateur(QWidget):
 		ptext = '<font size="12">{}</font>'.format(name)
 		letter.append(Paragraph(ptext, styles["Center"]))  
 
+		# Build the pdf
 		doc.build(letter)
 	
-
+	# When script end
 	def function_end(self):
 
+		# Re-enable the button
 		self.btn_launch.setEnabled(True)
-		os.chdir(self.path)
 
-	# Stuff when program start
+	# When script start
 	def function_start(self):
+
 			# Prevent the user to re-run the scrapper by disabling the button
 			self.btn_launch.setEnabled(False)
 
