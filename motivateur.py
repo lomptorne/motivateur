@@ -1,8 +1,9 @@
 import os 
 import sys
-
+import traceback
 import os.path
 import datetime
+
 from string import digits
 from pathlib import PureWindowsPath
 
@@ -190,10 +191,6 @@ class Motivateur(QWidget):
 		letter = []
 		outfilename = "Lettre.pdf"
 		outfilepath = os.path.join( self.path, outfilename )
-
-		# Setting the path for windows os 
-		if os.name == 'nt':
-			outfilepath = PureWindowsPath(outfilepath)
 
 		# Setting the pdf document and styles 
 		doc = SimpleDocTemplate(outfilepath, rightMargin=2*cm,leftMargin=2*cm,topMargin=2*cm,bottomMargin=2*cm)
