@@ -246,7 +246,11 @@ class Motivateur(QWidget):
 		# Build the pdf
 		doc.build(letter)
 
-		subprocess.call(["xdg-open", outfilepath])
+		if os.name != 'nt':
+
+			subprocess.call(["xdg-open", outfilepath])
+		else :
+			os.startfile(outfilepath)
 	# When script end
 	def function_end(self):
 
