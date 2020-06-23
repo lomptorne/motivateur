@@ -5,7 +5,7 @@ import os.path
 import datetime
 
 from string import digits
-from pathlib import PureWindowsPath
+import subprocess
 
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
@@ -245,7 +245,8 @@ class Motivateur(QWidget):
 
 		# Build the pdf
 		doc.build(letter)
-	
+
+		subprocess.call(["xdg-open", outfilepath])
 	# When script end
 	def function_end(self):
 
