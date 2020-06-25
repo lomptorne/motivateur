@@ -182,10 +182,11 @@ class Motivateur(QWidget):
 		today = datetime.date.today()
 		dateplace =  "À " + place + " le " + str(today.day) + "/" + str(today.month) + "/" + str(today.year)
 		contact = "Madame, Monsieur,"
-
+		end = contact
 		# If there is text in the contact field
 		if len(str(self.input_contact.text())) != 0 : 
-			contact = "à l'attention de " + str(self.input_contact.text())
+			contact = "à l'attention de " + str(self.input_contact.text()) + ","
+			end = str(self.input_contact.text()) + ","
 
 		# Setting the path for the output
 		letter = []
@@ -237,7 +238,7 @@ class Motivateur(QWidget):
 		ptext = '<font size="12">Je reste à votre disposition pour toute information complémentaire, ou pour vous rencontrer lors d’un entretien.</font>'
 		letter.append(Paragraph(ptext, styles["Normal"]))  
 		letter.append(Spacer(1, 15))
-		ptext = '<font size="12">Veuillez agréer, Madame, Monsieur, l’expression de mes sincères salutations.</font>'
+		ptext = '<font size="12">Veuillez agréer, {} l’expression de mes sincères salutations.</font>'.format(end)
 		letter.append(Paragraph(ptext, styles["Normal"]))
 		letter.append(Spacer(1, 30))
 		ptext = '<font size="12">{}</font>'.format(name)
